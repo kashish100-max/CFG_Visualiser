@@ -497,36 +497,33 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
       <div style={{ overflowX: "auto" }}>
         <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", margin: "auto" }}>
           <defs>
-            {/* Arrowhead marker — perfectly aligned to the line's angle automatically */}
+            {/* markerUnits="userSpaceOnUse" keeps arrow size fixed regardless of strokeWidth.
+                markerWidth/Height in px. refX=10 = tip of arrow, so tip touches circle edge. */}
             <marker
               id={`arrow-${animationKey}`}
-              markerWidth="8" markerHeight="8"
-              refX="7" refY="3"
+              markerWidth="18" markerHeight="18"
+              refX="18" refY="9"
               orient="auto"
-              markerUnits="strokeWidth">
-              <path d="M0,0 L0,6 L8,3 z" fill="#a78bfa" />
+              markerUnits="userSpaceOnUse">
+              <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
             </marker>
           </defs>
           {allNodes.map((node, i) =>
             (node.children || []).map((child, ci) => {
               if (!visibleSet.has(node) || !visibleSet.has(child)) return null;
 
-              // Line starts at bottom of parent circle, ends slightly before child circle
+              // Line starts at bottom of parent circle, ends exactly at child circle boundary
               const x1 = getX(node.x);
               const y1 = getY(node.depth) + R;
               const x2 = getX(child.x);
               const y2 = getY(child.depth) - R;
 
-              // Compute direction vector and stop the line 14px before the child
-              // so the arrowhead tip lands cleanly at the circle's border
+              // Pull back by arrowhead length (10px) so the tip lands on the circle edge
               const dx = x2 - x1, dy = y2 - y1;
               const len = Math.sqrt(dx * dx + dy * dy) || 1;
-              const stopX = x2 - (dx / len) * 14;
-              const stopY = y2 - (dy / len) * 14;
-
-              // Path length approximation for dash animation
+              const stopX = x2 - (dx / len) * 2;
+              const stopY = y2 - (dy / len) * 2;
               const pathLen = Math.round(len) + 10;
-              const lineD = `M ${x1} ${y1} L ${stopX} ${stopY}`;
 
               return (
                 <g key={`e${i}-${ci}-${animationKey}`}>
@@ -872,7 +869,7 @@ function ToolPage({ onBack }) {
                      background:rgba(15,23,42,0.9); flex-wrap:wrap; gap:8px; }
         .nb-title      { font-size:clamp(13px,1.8vw,17px); font-weight:700; }
         .nb-step-count { font-size:clamp(11px,1.3vw,13px); color:#6f757c; font-family:'JetBrains Mono'; }
-        .nb-body { padding:20px 22px 18px; max-height:clamp(320px,48vh,540px); overflow-y:auto; }
+        .nb-body { padding:20px 22px 18px; }
 
         /* ── unified step card ── */
         .nb-card {
@@ -1185,7 +1182,7 @@ function ToolPage({ onBack }) {
       height: "16px", 
       display: "inline-block" 
     }}></span>
-    <span style={{ color: "#FFF" }}>Active NT</span>
+    <span style={{ color: "#FFF",fontSize:"12px" }}>Active NT</span>
   </span>
 
   {/* Blue Circle (B) */}
@@ -1199,10 +1196,9 @@ function ToolPage({ onBack }) {
       borderRadius: "50%", 
       display: "flex", 
       alignItems: "center", 
-      justifyContent: "center",
-      fontSize: "9px"
+      justifyContent: "center"
     }}></span>
-    <span style={{ color: "#FFF" }}> Non-Terminal</span>
+    <span style={{ color: "#FFF",fontSize:"12px" }}> Non-Terminal</span>
   </span>
 
   {/* Green Circle (a) */}
@@ -1217,9 +1213,8 @@ function ToolPage({ onBack }) {
       display: "flex", 
       alignItems: "center", 
       justifyContent: "center",
-      fontSize: "9px"
     }}></span>
-    <span style={{ color: "#FFF" }}> Terminal</span>
+    <span style={{ color: "#FFF",fontSize:"12px" }}> Terminal</span>
   </span>
 </div>
                     <div className="nb-step-count">{stepsToShow.length > 0 ? `${stepsToShow.length - 1} step${stepsToShow.length !== 2 ? "s" : ""}` : "—"}</div>
@@ -1530,7 +1525,7 @@ export default function CFGApp() {
               </button>
             ))}
             {/* <div style={{ width:1, height:22, background:"rgba(99,102,241,0.18)", margin:"0 8px" }}/> */}
-            <button className="launch-nav" onClick={goTool}><span style={{fontWeight:200, fontSize:14}}>⚡ Launch Tool</span></button>
+            <button className="launch-nav" onClick={goTool}><span style={{fontWeight:300, fontSize:14}}>Launch Tool</span></button>
           </div>
           <button className="home-hamburger" onClick={() => setHomeMenuOpen(o => !o)} style={{ display:"none", background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:8, padding:"6px 10px", cursor:"pointer", color:"#94a3b8", fontSize:18 }}>
             {homeMenuOpen ? "✕" : "☰"}
@@ -1551,7 +1546,7 @@ export default function CFGApp() {
               Visualize derivations, parse trees, and the formal mathematics of context-free languages — step by step.
             </p>
             <div style={{ display:"flex", gap:14, justifyContent:"center", flexWrap:"wrap" }}>
-              <button className="btn-hero" onClick={goTool}>⚡ Launch CFG Generator</button>
+              <button className="btn-hero" onClick={goTool}>Launch CFG Generator</button>
               <button className="btn-outline" onClick={() => document.getElementById("concept")?.scrollIntoView({ behavior:"smooth" })}>Explore Theory</button>
             </div>
           </Reveal>
@@ -1904,14 +1899,28 @@ export default function CFGApp() {
               </div>
 
               {/* Concepts */}
-              <div>
-                <div style={{ fontSize:20, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:"#818cf8", marginBottom:18 }}>Related Concepts</div>
-                {["Pushdown Automata", "Chomsky Normal Form", "CYK Algorithm", "LR Parsing", "Pumping Lemma"].map(l => (
-                  <span key={l} className="footer-link" style={{ fontSize:16 }}>
-                    {l}
-                  </span>
-                ))}
-              </div>
+              {/* Related Concepts */}
+<div>
+  <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#818cf8", marginBottom: 18 }}>
+    Related Concepts
+  </div>
+  {[
+    { name: "Pushdown Automata", link: "https://en.wikipedia.org/wiki/Pushdown_automaton" },
+    { name: "Chomsky Normal Form", link: "https://en.wikipedia.org/wiki/Chomsky_normal_form" },
+    { name: "CYK Algorithm", link: "https://en.wikipedia.org/wiki/CYK_algorithm" },
+    { name: "LR Parsing", link: "https://en.wikipedia.org/wiki/LR_parser" },
+    { name: "Pumping Lemma", link: "https://en.wikipedia.org/wiki/Pumping_lemma_for_context-free_languages" }
+  ].map(concept => (
+    <span 
+      key={concept.name} 
+      className="footer-link" 
+      style={{ fontSize: 16, cursor: "pointer" }}
+      onClick={() => window.open(concept.link, "_blank")}
+    >
+      {concept.name}
+    </span>
+  ))}
+</div>
             </div>
 
             {/* Divider with grammar pill */}
