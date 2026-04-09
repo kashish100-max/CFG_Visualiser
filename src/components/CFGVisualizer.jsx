@@ -356,6 +356,25 @@ function getProductionRule(steps, stepIndex, rules, mode) {
   return `${expandedNT} → ${rhs}`;
 }
 
+// Returns { ruleStr, expandedNT, activeIdx, rhs } for notebook rendering
+function getProductionMeta(steps, stepIndex, rules, mode) {
+  if (stepIndex === 0 || !steps[stepIndex - 1] || !steps[stepIndex]) return null;
+  const prev = steps[stepIndex - 1], curr = steps[stepIndex];
+  const nts = new Set(Object.keys(rules));
+  const ntIdxs = prev.reduce((a, t, i) => { if (nts.has(t)) a.push(i); return a; }, []);
+  if (ntIdxs.length === 0) return null;
+  const idx = mode === "lmd" ? ntIdxs[0] : ntIdxs[ntIdxs.length - 1];
+  const expandedNT = prev[idx];
+  const beforeStr = prev.slice(0, idx).join(""), afterStr = prev.slice(idx + 1).join("");
+  const currStr = curr.join("");
+  let rhs = "";
+  if (currStr.startsWith(beforeStr) && currStr.endsWith(afterStr))
+    rhs = currStr.slice(beforeStr.length, currStr.length - afterStr.length || undefined);
+  if (!rhs) rhs = "ε";
+  // activeIdx = position in PREV step's sentential form that was expanded
+  return { ruleStr: `${expandedNT} → ${rhs}`, expandedNT, activeIdx: idx, rhs };
+}
+
 // ─── ANIMATED COUNTER ─────────────────────────────────────────────────────────
 function AnimatedCount({ value, color = "#818cf8" }) {
   const startVal = useRef(value + 50 + Math.floor(Math.random() * 50));
@@ -472,8 +491,8 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
           <span style={{ fontSize: 13, color: "#4ade80", fontFamily: "'JetBrains Mono'" }}>✓ Complete</span>
         )}
       </div>
-      <div style={{ fontSize: 12, color: "#475569", marginBottom: 8, fontFamily: "'JetBrains Mono'" }}>
-        hover nodes for rules
+      <div style={{ fontSize: 12, color: "#adafb1", marginBottom: 8, fontFamily: "'JetBrains Mono'" }}>
+        Hover nodes for rules
       </div>
       <div style={{ overflowX: "auto" }}>
         <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", margin: "auto" }}>
@@ -832,10 +851,95 @@ function ToolPage({ onBack }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         * { box-sizing:border-box; }
-        .t-nt { color:#818cf8; font-weight:700; }
+        /* ── token colours ── */
+        .t-nt   { color:#93c5fd; font-weight:700; }
         .t-term { color:#4ade80; font-weight:700; }
-        .step-row { display:flex; align-items:flex-start; gap:8px; padding:8px 12px; border-radius:8px; background:rgba(30,41,59,0.5); margin-bottom:6px; font-family:'JetBrains Mono',monospace; border:1px solid rgba(99,102,241,0.08); transition:background 0.2s; flex-wrap:wrap; }
+        .t-active { color:#1c1917; font-weight:800;
+                    background:linear-gradient(135deg,#fef08a,#fbbf24);
+                    border-radius:5px; padding:2px 6px;
+                    box-shadow:0 0 10px rgba(251,191,36,0.6),0 0 0 2px rgba(251,191,36,0.25);
+                    position:relative; }
+        /* legacy – kept so any stray usages don't break */
+        .step-row { display:flex; align-items:flex-start; gap:8px; padding:8px 12px; border-radius:8px;
+                    background:rgba(30,41,59,0.5); margin-bottom:6px; font-family:'JetBrains Mono',monospace;
+                    border:1px solid rgba(99,102,241,0.08); transition:background 0.2s; flex-wrap:wrap; }
         .step-row:hover { background:rgba(49,46,129,0.25); }
+
+        /* ── panel shell ── */
+        .nb-panel  { background:#080e1c; border:1px solid rgba(99,102,241,0.25); border-radius:18px; overflow:hidden; }
+        .nb-header { display:flex; justify-content:space-between; align-items:center;
+                     padding:14px 22px 13px; border-bottom:1px solid rgba(99,102,241,0.15);
+                     background:rgba(15,23,42,0.9); flex-wrap:wrap; gap:8px; }
+        .nb-title      { font-size:clamp(13px,1.8vw,17px); font-weight:700; }
+        .nb-step-count { font-size:clamp(11px,1.3vw,13px); color:#6f757c; font-family:'JetBrains Mono'; }
+        .nb-body { padding:20px 22px 18px; max-height:clamp(320px,48vh,540px); overflow-y:auto; }
+
+        /* ── unified step card ── */
+        .nb-card {
+          display:flex; align-items:stretch; gap:0;
+          margin-bottom:8px;
+          border-radius:12px; overflow:hidden;
+          border:1px solid rgba(99,102,241,0.13);
+          transition:border-color 0.2s, box-shadow 0.2s;
+        }
+        .nb-card:hover { border-color:rgba(139,92,246,0.35); box-shadow:0 2px 16px rgba(99,102,241,0.08); }
+        .nb-card.card-last { border-color:rgba(74,222,128,0.28); }
+        .nb-card.card-last:hover { border-color:rgba(74,222,128,0.5); box-shadow:0 2px 16px rgba(74,222,128,0.08); }
+
+        /* left gutter: step index + arrow stacked */
+        .nb-gutter {
+          display:flex; flex-direction:column; align-items:center; justify-content:center;
+          min-width:54px; padding:10px 6px; gap:4px; flex-shrink:0;
+          background:rgba(99,102,241,0.07); border-right:1px solid rgba(99,102,241,0.12);
+        }
+        .nb-card.card-last .nb-gutter { background:rgba(74,222,128,0.06); border-right-color:rgba(74,222,128,0.15); }
+        .nb-gutter-idx  { font-family:'JetBrains Mono'; font-size:clamp(9px,1.05vw,11px);
+                          color:#475569; font-weight:600; letter-spacing:0.04em; user-select:none; }
+        .nb-gutter-arr  { font-family:'JetBrains Mono'; font-size:clamp(15px,1.8vw,19px);
+                          color:#6366f1; line-height:1; }
+        .nb-card.card-last .nb-gutter-arr { color:#4ade80; }
+
+        /* centre: rule pill (action) + sentential form (result) */
+        .nb-centre { display:flex; flex-direction:column; justify-content:center; flex:1; padding:9px 14px; gap:6px; background:rgba(15,23,42,0.55); }
+        .nb-card.card-last .nb-centre { background:rgba(9,28,18,0.6); }
+
+        .nb-action-row { display:flex; align-items:center; gap:6px; }
+        .nb-action-icon { font-size:10px; color:#7c3aed; }
+        .nb-action-text {
+          font-family:'JetBrains Mono'; font-size:clamp(9px,1.05vw,11px);
+          color:#a78bfa; background:rgba(109,40,217,0.15);
+          border:1px solid rgba(139,92,246,0.28);
+          border-radius:20px; padding:2px 10px;
+          white-space:nowrap; letter-spacing:0.02em;
+        }
+        .nb-action-text .ar-nt  { color:#c4b5fd; font-weight:700; }
+        .nb-action-text .ar-rhs { color:#e9d5ff; }
+
+        .nb-result-row { display:flex; align-items:center; flex-wrap:wrap; gap:3px; }
+        .nb-sym { font-family:'JetBrains Mono'; font-size:clamp(13px,1.6vw,17px); font-weight:700; display:inline-block; }
+
+        /* ── connector arrow between cards ── */
+        .nb-connector { text-align:center; color:rgba(99,102,241,0.35); font-size:16px;
+                        margin:-2px 0; line-height:1; user-select:none; padding-left:26px; }
+
+        /* ── yield bar ── */
+        .nb-yield-bar {
+          margin-top:14px; padding:14px 18px;
+          background:linear-gradient(135deg,rgba(16,57,32,0.85),rgba(5,46,22,0.9));
+          border:1px solid rgba(74,222,128,0.35); border-radius:12px;
+          display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+        }
+        .nb-yield-badge {
+          font-family:'JetBrains Mono'; font-size:clamp(9px,1.05vw,11px); font-weight:800;
+          letter-spacing:0.12em; text-transform:uppercase;
+          color:#052e16; background:linear-gradient(135deg,#4ade80,#22c55e);
+          border-radius:20px; padding:3px 12px; flex-shrink:0;
+        }
+        .nb-yield-eq { font-family:'JetBrains Mono'; font-size:clamp(12px,1.4vw,15px); color:#6b7280; }
+        .nb-yield-str { font-family:'JetBrains Mono'; font-size:clamp(14px,1.7vw,18px);
+                        font-weight:800; color:#86efac; letter-spacing:0.06em; word-break:break-all; }
+        .nb-yield-len { margin-left:auto; font-family:'JetBrains Mono';
+                        font-size:clamp(10px,1.1vw,12px); color:#4ade80; opacity:0.8; }
         textarea, input[type=text] { background:rgba(15,23,42,0.95); border:1px solid rgba(99,102,241,0.2); border-radius:10px; color:#e2e8f0; font-family:'JetBrains Mono',monospace; font-size:clamp(12px,1.5vw,14px); padding:12px; width:100%; outline:none; transition:border-color 0.2s; resize:vertical; }
         textarea:focus, input[type=text]:focus { border-color:rgba(139,92,246,0.5); box-shadow:0 0 0 3px rgba(139,92,246,0.08); }
         .tab-btn { background:rgba(99,102,241,0.08); color:#94a3b8; border:1px solid rgba(99,102,241,0.18); padding:8px 14px; border-radius:8px; font-size:clamp(12px,1.5vw,15px); cursor:pointer; font-family:inherit; transition:all 0.2s; white-space:nowrap; }
@@ -1045,18 +1149,87 @@ function ToolPage({ onBack }) {
               </div>
             )}
 
-            {/* LMD / RMD Tab */}
+            {/* LMD / RMD Notebook Tab */}
             {(activeTab === "lmd" || activeTab === "rmd") && isCFG && (
-              <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(99,102,241,0.14)", borderRadius: 14, padding: "clamp(14px,2vw,20px)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ fontSize: "clamp(13px,1.8vw,17px)", fontWeight: 700, color: activeTab === "lmd" ? "#818cf8" : "#4ade80" }}>
-                    {activeTab === "lmd" ? "Leftmost Derivation" : "Rightmost Derivation"}
+              <div className="nb-panel">
+                {/* ── Notebook header ── */}
+                <div className="nb-header">
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    
+                    <div>
+                      <div className="nb-title" style={{ color: activeTab==="lmd" ? "#a5b4fc" : "#4ade80" }}>
+                        {activeTab==="lmd" ? "← Leftmost Derivation" : "Rightmost Derivation →"}
+                      </div>
+                      <div style={{ fontSize:"clamp(10px,1.1vw,12px)", color:"#8a8d94", fontFamily:"'JetBrains Mono'", marginTop:2 }}>
+                        {activeTab==="lmd" ? "Always expand the leftmost non-terminal first" : "Always expand the rightmost non-terminal first"}
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: "clamp(11px,1.3vw,14px)", color: "#6f757c", fontFamily: "'JetBrains Mono'" }}>{stepsToShow.length} steps</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    {/* Color key */}
+                    <div style={{ 
+  display: "flex", 
+  gap: "16px", 
+  alignItems: "center", 
+  fontSize: "clamp(9px, 1.05vw, 11px)", 
+  fontFamily: "'JetBrains Mono'", 
+  flexWrap: "wrap",
+  padding: "10px"
+}}>
+  {/* Yellow Box (No text, just the box) */}
+  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <span style={{ 
+      background: "linear-gradient(135deg, #fde68a, #fbbf24)", 
+      borderRadius: "3px", 
+      width: "16px", 
+      height: "16px", 
+      display: "inline-block" 
+    }}></span>
+    <span style={{ color: "#FFF" }}>Active NT</span>
+  </span>
+
+  {/* Blue Circle (B) */}
+  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <span style={{ 
+      color: "#1e1b4b", 
+      background: "#93c5fd", 
+      fontWeight: 800, 
+      width: "18px", 
+      height: "18px", 
+      borderRadius: "50%", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
+      fontSize: "9px"
+    }}></span>
+    <span style={{ color: "#FFF" }}> Non-Terminal</span>
+  </span>
+
+  {/* Green Circle (a) */}
+  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+    <span style={{ 
+      color: "#064e3b", 
+      background: "#4ade80", 
+      fontWeight: 800, 
+      width: "18px", 
+      height: "18px", 
+      borderRadius: "50%", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center",
+      fontSize: "9px"
+    }}></span>
+    <span style={{ color: "#FFF" }}> Terminal</span>
+  </span>
+</div>
+                    <div className="nb-step-count">{stepsToShow.length > 0 ? `${stepsToShow.length - 1} step${stepsToShow.length !== 2 ? "s" : ""}` : "—"}</div>
+                  </div>
                 </div>
-                <div style={{ maxHeight: "clamp(300px,45vh,500px)", overflowY: "auto" }}>
+
+                {/* ── Notebook body ── */}
+                <div className="nb-body">
                   {stepsToShow.length === 0 ? (
-                    <div style={{ padding: "8px 0" }}>
+                    <div>
                       {generated && failureInfo ? (
                         <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: 10, padding: "16px 18px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
@@ -1121,23 +1294,104 @@ function ToolPage({ onBack }) {
                         <div style={{ color: "#475569", textAlign: "center", padding: "32px 0", fontSize: "clamp(12px,1.5vw,15px)" }}>Click Generate to compute derivation steps</div>
                       )}
                     </div>
-                  ) : stepsToShow.map((step, i) => {
-                    const prodRule = i === 0 ? null : getProductionRule(stepsToShow, i, treeRules || {}, mode);
-                    return (
-                      <div key={i} className="step-row">
-                        <span style={{ color: i === 0 ? "#818cf8" : "#475569", minWidth: 16, fontSize: "clamp(12px,1.4vw,15px)", fontFamily: "'JetBrains Mono'", marginTop: 1 }}>{i === 0 ? "⊢" : "→"}</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ letterSpacing: "0.03em", fontSize: "clamp(12px,1.4vw,15px)" }}>
-                            {step.map((sym, j) => <span key={j} className={nts.has(sym) ? "t-nt" : "t-term"} style={{ marginRight: 1 }}>{sym}</span>)}
-                          </div>
-                          {prodRule && <div className="prod-rule-badge" style={{ display: "inline-block", marginTop: 3 }}>{prodRule}</div>}
-                        </div>
-                        {i === stepsToShow.length - 1 && step.every(s => !nts.has(s)) && (
-                          <span style={{ fontSize: "clamp(10px,1.2vw,13px)", color: "#4ade80", background: "rgba(74,222,128,0.1)", padding: "2px 7px", borderRadius: 4, border: "1px solid rgba(74,222,128,0.2)", flexShrink: 0 }}>✓ derived</span>
-                        )}
-                      </div>
+                  ) : (() => {
+                    // ── pre-compute metadata for every transition ──────────────────
+                    // metas[i] describes the rule applied TO REACH step i
+                    const metas = stepsToShow.map((_, i) =>
+                      i === 0 ? null : getProductionMeta(stepsToShow, i, treeRules || {}, mode)
                     );
-                  })}
+                    const finalStep = stepsToShow[stepsToShow.length - 1];
+                    const yieldStr  = finalStep && finalStep.every(s => !nts.has(s)) ? finalStep.join("") : null;
+
+                    // activeSymIdx[i] = position in step[i] of the NT about to be expanded
+                    // (i.e. the NT that metas[i+1] will consume)
+                    const activeSymIdx = stepsToShow.map((_, i) => {
+                      const nextMeta = i < stepsToShow.length - 1 ? metas[i + 1] : null;
+                      return nextMeta ? nextMeta.activeIdx : -1;
+                    });
+
+                    return (
+                      <>
+                        {stepsToShow.map((step, i) => {
+                          const meta   = metas[i];          // rule that produced THIS step
+                          const isLast = i === stepsToShow.length - 1;
+                          const aIdx   = activeSymIdx[i];   // which sym in THIS step fires next
+
+                          // ── gutter labels ──
+                          const arrLabel = i === 0 ? "⊢" : "⇒";
+
+                          return (
+                            <div key={i}>
+                              {/* ── connector dot between cards (skip before first) ── */}
+                              {i > 0 && <div className="nb-connector">╎</div>}
+
+                              {/* ═══════════ UNIFIED STEP CARD ═══════════ */}
+                              <div className={`nb-card${isLast && yieldStr ? " card-last" : ""}`}>
+
+                                {/* LEFT GUTTER: arrow */}
+                                <div className="nb-gutter">
+                                  <span className="nb-gutter-arr">{arrLabel}</span>
+                                </div>
+
+                                {/* CENTRE: action row (rule pill) + result row (sentential form) */}
+                                <div className="nb-centre">
+
+                                  {/* ── ACTION ROW: rule pill sits above the result ── */}
+                                  {meta ? (
+                                    <div className="nb-action-row">
+                                      <span className="nb-action-icon">▶</span>
+                                      <span className="nb-action-text">
+                                        Apply&nbsp;
+                                        <span className="ar-nt">{meta.expandedNT}</span>
+                                        &nbsp;→&nbsp;
+                                        <span className="ar-rhs">{meta.rhs || "ε"}</span>
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    /* step 0: no rule applied, just a "start" label */
+                                    <div className="nb-action-row">
+                                      <span className="nb-action-icon">◉</span>
+                                      <span className="nb-action-text" style={{ color:"#94a3b8", background:"rgba(71,85,105,0.18)", borderColor:"rgba(100,116,139,0.25)" }}>
+                                        Start symbol
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* ── RESULT ROW: sentential form with active-symbol highlight ── */}
+                                  <div className="nb-result-row">
+                                    {step.map((sym, j) => {
+                                      const isActive = j === aIdx && !isLast;
+                                      const isNT     = nts.has(sym);
+                                      return (
+                                        <span
+                                          key={j}
+                                          className={`nb-sym${isActive ? " t-active" : isNT ? " t-nt" : " t-term"}`}
+                                          title={isActive ? `"${sym}" will be expanded in the next step` : isNT ? "Non-Terminal" : "Terminal"}
+                                        >
+                                          {sym}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+
+                                </div>{/* /nb-centre */}
+                              </div>{/* /nb-card */}
+                            </div>
+                          );
+                        })}
+
+                        {/* ══════════ YIELD BAR ══════════ */}
+                        {yieldStr && (
+                          <div className="nb-yield-bar">
+                            <span className="nb-yield-badge">Yield</span>
+                            <span className="nb-yield-eq">w&nbsp;=</span>
+                            <span className="nb-yield-str">{yieldStr}</span>
+                            <span className="nb-yield-len">|w|&nbsp;=&nbsp;{yieldStr.length}</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}
