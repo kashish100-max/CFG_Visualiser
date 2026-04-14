@@ -1777,7 +1777,7 @@ export default function CFGApp() {
                   </div>
                   <p style={{ fontSize:20, color:"#64748b", marginBottom:18, lineHeight:1.6 }}>{col.rule}</p>
                   <div style={{ fontSize:20, color:"#b5bcc5", fontFamily:"'JetBrains Mono'", marginBottom:12 }}>
-                    G: S → AB, A → aA | a, B → b   <br></br>Target: <span style={{ color:"#4ade80" }}>aab</span>
+                    <span style={{color:"white"}}>G:</span> S → AB, A → aA | a, B → b   <br></br><span style={{color:"white"}}>Target:</span> <span style={{ color:"#4ade80" }}>aab</span>
                   </div>
                   <div style={{ borderTop:"1px solid rgba(99,102,241,0.1)", paddingTop:12 ,}}>
                     {col.steps.map((step, i) => (
@@ -1827,7 +1827,7 @@ export default function CFGApp() {
           <Reveal delay={120}>
   <div style={{ margin: "0 auto", width: "fit-content", background: "rgba(15,23,42,0.85)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: 16, padding: 28 }}>
     <div style={{ fontSize: 20, color: "#b0b0b0", marginBottom: 18 }}>
-      <span style={{ color: "white" }}>Example Visualisation</span> <br />
+      <span style={{ color: "white" }}>Tree Visualisation Example</span> <br />
       <br />
       <code style={{ color: "#818cf8", fontFamily: "'JetBrains Mono'" }}>S → aSb | ab</code> <br />
       Target: <code style={{ color: "#4ade80", fontFamily: "'JetBrains Mono'" }}>aaabbb</code>
