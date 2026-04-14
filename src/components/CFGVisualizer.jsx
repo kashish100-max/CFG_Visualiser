@@ -1476,9 +1476,9 @@ export default function CFGApp() {
         .card-glow { border:1px solid rgba(99,102,241,0.18); background:rgba(15,23,42,0.82); border-radius:16px; padding:26px; transition:border-color 0.3s,transform 0.3s,box-shadow 0.3s; }
         .card-glow:hover { border-color:rgba(139,92,246,0.42); transform:translateY(-3px); box-shadow:0 8px 32px rgba(99,102,241,0.1); }
 
-        .btn-hero { background:linear-gradient(135deg,#6366f1,#8b5cf6,#7c3aed); color:white; border:none; padding:15px 36px; border-radius:50px; font-size:15px; font-weight:800; cursor:pointer; transition:all 0.3s; font-family:inherit; }
+        .btn-hero { background:linear-gradient(135deg,#6366f1,#8b5cf6,#7c3aed); color:white; border:none; padding:15px 36px; border-radius:50px; font-size:15px; font-weight:800; cursor:pointer; transition:all 0.3s; font-family:inherit; min-width:220px; text-align:center; }
         .btn-hero:hover { transform:translateY(-2px); box-shadow:0 0 36px rgba(139,92,246,0.45); }
-        .btn-outline { background:transparent; color:#94a3b8; border:1px solid rgba(99,102,241,0.3); padding:14px 28px; border-radius:50px; font-size:15px; cursor:pointer; transition:all 0.2s; font-family:inherit; font-weight:500; }
+        .btn-outline { background:transparent; color:#94a3b8; border:1px solid rgba(99,102,241,0.3); padding:15px 36px; border-radius:50px; font-size:15px; cursor:pointer; transition:all 0.2s; font-family:inherit; font-weight:500; min-width:220px; text-align:center; }
         .btn-outline:hover { border-color:rgba(139,92,246,0.5); color:#c084fc; background:rgba(99,102,241,0.07); }
 
         .step-demo { display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:8px; background:rgba(30,41,59,0.55); margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:13px; border:1px solid rgba(99,102,241,0.08); }
@@ -1493,6 +1493,16 @@ export default function CFGApp() {
         .footer-link { color:#475569; font-size:13px; transition:color 0.2s; cursor:pointer; display:block; margin-bottom:9px; }
         .footer-link:hover { color:#a5b4fc; }
         .ambig-box { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.2); border-radius:12px; padding:24px; }
+        @media (max-width: 600px) {
+          .ambig-grid { grid-template-columns: 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 24px !important; }
+          .footer-brand { grid-column: 1 / -1 !important; }
+          .footer-bottom { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+          .btn-hero, .btn-outline { min-width: 0 !important; width: 100%; }
+        }
+        @media (max-width: 420px) {
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
 
         /* Mini live-preview strip in hero */
         .hero-chip { display:inline-flex; align-items:center; gap:6px; background:rgba(99,102,241,0.09); border:1px solid rgba(99,102,241,0.18); border-radius:8px; padding:4px 11px; font-family:'JetBrains Mono',monospace; font-size:12px; color:#64748b; }
@@ -1793,7 +1803,7 @@ export default function CFGApp() {
               <div style={{ fontSize:22, color:"#94a3b8", marginBottom:16 }}>
                 The string <code style={{ color:"#f87171", fontFamily:"'JetBrains Mono'" }}>a+a*b</code> yields two different leftmost derivations:
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }} className="ambig-grid">
                 {[
                   { l:"Derivation 1 (+ root)", c:"#f87171", steps:["S → S+S","→ a+S","→ a+S*S","→ a+a*S","→ a+a*b"] },
                   { l:"Derivation 2 (* root)", c:"#fb923c", steps:["S → S*S","→ S+S*S","→ a+S*S","→ a+a*S","→ a+a*b"] },
@@ -1845,7 +1855,7 @@ export default function CFGApp() {
         <br></br>
 
         {/* ── CTA BAND ── */}
-        <section style={{ width:"fit-content", margin:"0 auto", padding:"24px 32px 80px" }}>
+        <section style={{ width:"100%", maxWidth:800, margin:"0 auto", padding:"24px 24px 80px" }}>
           <Reveal style={{ margin:"0 auto", textAlign:"center" }}>
             <div style={{ background:"linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.15),rgba(59,130,246,0.1))", border:"1px solid rgba(139,92,246,0.22)", borderRadius:24, padding:"56px 40px", textAlign:"center" }}>
               <div style={{ fontSize:18, letterSpacing:"0.15em", textTransform:"uppercase", color:"#818cf8", fontWeight:700, marginBottom:14 }}>Ready to Experiment?</div>
@@ -1859,9 +1869,9 @@ export default function CFGApp() {
         {/* ── FOOTER ── */}
         <footer style={{ borderTop:"1px solid rgba(99,102,241,0.1)", background:"rgba(3,0,0,0.97)", backdropFilter:"blur(20px)", padding:"64px 32px 32px" }}>
           <div style={{ margin:"0 auto" }}>
-            <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:30, marginBottom:56 }}>
+            <div className="footer-grid" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:30, marginBottom:56 }}>
               {/* Brand */}
-              <div>
+              <div className="footer-brand">
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:18 }}>
                   <div style={{ width:38, height:38, borderRadius:10, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, fontWeight:800, color:"white" }}>G</div>
                   <span style={{ fontSize:20, fontWeight:800, color:"#e2e8f0" }}>CFG <span style={{ color:"#818cf8" }}>Visualiser</span></span>
@@ -1936,7 +1946,7 @@ export default function CFGApp() {
             </div>
 
             {/* Bottom bar */}
-            <div style={{ display:"flex", justifyContent:"center", alignItems:"center", flexWrap:"wrap", gap:12 }}>
+            <div className="footer-bottom" style={{ display:"flex", justifyContent:"center", alignItems:"center", flexWrap:"wrap", gap:12 }}>
               <div style={{ fontSize:16, color:"#b5b5b5" }}>© 2026 CFG Visualiser</div>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{ width:6, height:6, borderRadius:"50%", background:"#4ade80" }}/>
