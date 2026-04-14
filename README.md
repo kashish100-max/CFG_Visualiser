@@ -1,16 +1,47 @@
-# React + Vite
+# CFG Visualizer — Context-Free Grammar Derivation & Parse Tree Generator
+It is an interactive web-based tool designed to help students understand Context-Free Grammars (CFGs) through visualization and step-by-step derivations.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Features
+## 1. Grammar Input System
+->Accepts CFG rules in structured format (S -> aSb | ab)
+->Supports multiple productions and alternatives
+->Detects invalid grammar formats
 
-Currently, two official plugins are available:
+## 2. String Validation
+->Users input a target string
+->System verifies whether it can be derived from the grammar
+->Provides detailed failure analysis if not derivable
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 3. Leftmost & Rightmost Derivation
+->Generates:
+    ->Leftmost Derivation (LMD)
+    ->Rightmost Derivation (RMD)
+->Step-by-step expansion with highlighted symbols
 
-## React Compiler
+## 4. Parse Tree Visualization
+->Automatically constructs parse trees
+->Interactive, animated tree rendering Shows:
+    ->Parent-child relationships
+    ->Symbol expansion flow
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 5. Ambiguity Detection
+->Detects if grammar is ambiguous
+->Generates multiple parse trees for the same string
+->Allows comparison between trees
 
-## Expanding the ESLint configuration
+## 6. Smart Error Analysis
+->When derivation fails, the system explains why:
+   ->Unreachable non-terminals
+   ->Non-productive symbols
+   ->Prefix mismatches
+   ->Invalid grammar structures
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 7. Auto String Generation
+->Suggests a valid string if the given one cannot be derived
+->Helps debug grammar issues
+
+## 8. Interactive UI
+->Animated transitions
+->Step navigation controls (Play / Pause / Step)
+->Responsive design (mobile + desktop)
+->Visual highlighting of terminals and non-terminals
