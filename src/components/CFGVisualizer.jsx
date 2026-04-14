@@ -1508,7 +1508,19 @@ export default function CFGApp() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
         * { box-sizing:border-box; margin:0; padding:0; }
         ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#0f172a; } ::-webkit-scrollbar-thumb { background:#334155; border-radius:3px; }
-        .glow-text { background:linear-gradient(135deg,#818cf8 0%,#c084fc 50%,#38bdf8 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        @keyframes gradientShift {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .glow-text {
+          background: linear-gradient(270deg, #818cf8, #c084fc, #38bdf8, #6366f1, #a78bfa, #67e8f9);
+          background-size: 300% 300%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: gradientShift 5s ease infinite;
+        }
 
         .nav-link { cursor:pointer; font-size:11.5px; letter-spacing:0.07em; padding:6px 13px; border-radius:20px; transition:all 0.22s; color:#64748b; text-transform:uppercase; font-weight:700; border:none; background:none; position:relative; }
         .nav-link:hover { color:#94a3b8; background:rgba(99,102,241,0.1); }
