@@ -455,7 +455,7 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex, compact = false }
   // ── Desktop: original big layout ──────────────────────────────
   // ── Mobile:  compact responsive layout ───────────────────────
   // ── compact: small preview on landing page ────────────────────
-  const R    = isMobile ? 14 : 22;
+  const R    = isMobile ? 18 : 22;
   const hGap = isMobile ? 55 : 120;
   const vGap = isMobile ? 65 : 140;
   const pad  = isMobile ? 25 : 75;
@@ -563,6 +563,17 @@ orient="auto"
 markerUnits="strokeWidth">
               <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
             </marker>
+            <marker
+              id={`arrow-mobile-${animationKey}`}
+              markerWidth="7"
+              markerHeight="7"
+              refX="6"
+              refY="3.5"
+              viewBox="0 0 7 7"
+              orient="auto"
+              markerUnits="userSpaceOnUse">
+              <path d="M0,0 L0,7 L7,3.5 z" fill="#a78bfa" />
+            </marker>
           </defs>
 
           {/* ── Edges ── */}
@@ -584,7 +595,7 @@ markerUnits="strokeWidth">
                     style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
                   <line x1={x1} y1={y1} x2={stopX} y2={stopY}
                     stroke="#818cf8" strokeWidth="1.2" strokeLinecap="butt"
-                    markerEnd={`url(#arrow-${animationKey})`}
+                    markerEnd={isMobile ? `url(#arrow-mobile-${animationKey})` : `url(#arrow-${animationKey})`}
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
                     style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
                 </g>
