@@ -452,9 +452,10 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
   const visibleSet = new Set(bfsOrder.slice(0, currentStep));
 
   const btnBase = {
-    border: "none", borderRadius: 7, fontSize: 14, fontWeight: 600,
-    cursor: "pointer", fontFamily: "inherit", padding: "6px 14px",
-    display: "flex", alignItems: "center", gap: 5, transition: "all 0.2s"
+    border: "none", borderRadius: 7, fontSize: "clamp(12px,3vw,14px)", fontWeight: 600,
+    cursor: "pointer", fontFamily: "inherit", padding: "7px 12px",
+    display: "flex", alignItems: "center", gap: 4, transition: "all 0.2s",
+    minHeight: 36, whiteSpace: "nowrap"
   };
   const btnEnabled  = { ...btnBase, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "white",  boxShadow: "0 0 10px rgba(139,92,246,0.3)" };
   const btnDisabled = { ...btnBase, background: "rgba(99,102,241,0.08)",                   color: "#77808b", cursor: "not-allowed" };
@@ -494,8 +495,8 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
       <div style={{ fontSize: 12, color: "#adafb1", marginBottom: 8, fontFamily: "'JetBrains Mono'" }}>
         Hover nodes for rules
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", margin: "auto" }}>
+      <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "70vh", WebkitOverflowScrolling: "touch", borderRadius: 10, background: "rgba(8,14,28,0.5)", padding: "4px" }}>
+        <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", margin: "auto", minWidth: Math.min(W, 260) }}>
           <defs>
             {/* markerUnits="userSpaceOnUse" keeps arrow size fixed regardless of strokeWidth.
                 markerWidth/Height in px. refX=10 = tip of arrow, so tip touches circle edge. */}
@@ -819,6 +820,12 @@ function ToolPage({ onBack }) {
         setAutoGenStr(autoStr);
       }
       setGenerated(true); setAnimationKey(k => k + 1);
+      setActiveTab("lmd");
+      // Scroll to results panel on mobile
+      setTimeout(() => {
+        const el = document.getElementById("cfg-results-panel");
+        if (el && window.innerWidth < 769) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     } catch (e) { setError("Error: " + e.message); }
   }, [grammarText, targetStr]);
 
@@ -1021,7 +1028,7 @@ function ToolPage({ onBack }) {
           </div>
 
           {/* RIGHT PANEL */}
-          <div>
+          <div id="cfg-results-panel">
             {/* Legend + Stats */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
               <div style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(99,102,241,0.14)", borderRadius: 12, padding: "12px 16px" }}>
@@ -1478,8 +1485,12 @@ export default function CFGApp() {
 
         .btn-hero { background:linear-gradient(135deg,#6366f1,#8b5cf6,#7c3aed); color:white; border:none; padding:15px 36px; border-radius:50px; font-size:15px; font-weight:800; cursor:pointer; transition:all 0.3s; font-family:inherit; min-width:220px; text-align:center; }
         .btn-hero:hover { transform:translateY(-2px); box-shadow:0 0 36px rgba(139,92,246,0.45); }
-        .btn-outline { background:transparent; color:#94a3b8; border:1px solid rgba(99,102,241,0.3); padding:15px 36px; border-radius:50px; font-size:15px; cursor:pointer; transition:all 0.2s; font-family:inherit; font-weight:500; min-width:220px; text-align:center; }
-        .btn-outline:hover { border-color:rgba(139,92,246,0.5); color:#c084fc; background:rgba(99,102,241,0.07); }
+        .btn-outline { background:transparent; color:#94a3b8; border:none; padding:15px 36px; border-radius:50px; font-size:15px; cursor:pointer; transition:all 0.2s; font-family:inherit; font-weight:500; min-width:220px; text-align:center; position:relative; }
+        .btn-outline::before { content:''; position:absolute; inset:-2px; border-radius:52px; background:conic-gradient(from var(--angle,0deg), #6366f1, #8b5cf6, #c084fc, #38bdf8, #6366f1); animation:spinBorder 2.5s linear infinite; z-index:-1; }
+        .btn-outline::after { content:''; position:absolute; inset:0; border-radius:50px; background:#030712; z-index:-1; }
+        @property --angle { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+        @keyframes spinBorder { to { --angle: 360deg; } }
+        .btn-outline:hover { color:#c084fc; background:rgba(99,102,241,0.07); }
 
         .step-demo { display:flex; align-items:flex-start; gap:8px; padding:9px 14px; border-radius:8px; background:rgba(30,41,59,0.55); margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:13px; border:1px solid rgba(99,102,241,0.08); flex-wrap:wrap; }
         .nt { color:#818cf8; font-weight:700; }
@@ -1499,6 +1510,20 @@ export default function CFGApp() {
           .footer-brand { grid-column: 1 / -1 !important; }
           .footer-bottom { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
           .btn-hero, .btn-outline { min-width: 0 !important; width: 100%; }
+          .app-card { padding: 16px !important; }
+          .card-glow { padding: 16px !important; }
+          .derive-col { padding: 14px !important; min-width: 0 !important; }
+        }
+        @media (max-width: 480px) {
+          .app-card h3 { font-size: 18px !important; }
+          .app-card p { font-size: 14px !important; }
+          .derive-col { font-size: 13px; }
+        }
+        @media (max-width: 700px) {
+          section { padding-left: 16px !important; padding-right: 16px !important; }
+          section h2 { font-size: clamp(24px,6vw,36px) !important; }
+          section p { font-size: clamp(14px,3.5vw,18px) !important; }
+          .badge { font-size: clamp(10px,2.5vw,14px) !important; }
         }
         @media (max-width: 420px) {
           .footer-grid { grid-template-columns: 1fr !important; }
@@ -1546,7 +1571,7 @@ export default function CFGApp() {
       <div style={{ position:"relative", zIndex:1 }}>
 
         {/* ── HERO ── */}
-        <section style={{ maxWidth:1100, margin:"0 auto", padding:"110px 32px 80px", textAlign:"center" }}>
+        <section style={{ maxWidth:1100, margin:"0 auto", padding:"clamp(60px,10vw,110px) clamp(16px,4vw,32px) clamp(40px,6vw,80px)", textAlign:"center" }}>
           <Reveal>
             <h1 style={{ fontSize:"clamp(44px,7vw,82px)", fontWeight:800, lineHeight:1.04, letterSpacing:"-0.04em", marginBottom:24 }}>
               <span className="glow-text">Master Context-Free</span>
@@ -1646,13 +1671,15 @@ export default function CFGApp() {
 
           {/* Production rule format strip */}
           <Reveal delay={200}>
-            <div style={{ marginTop:20, background:"rgba(15,23,42,0.7)", border:"1px solid rgba(99,102,241,0.12)", borderRadius:12, padding:"16px 20px", display:"flex", alignItems:"center", gap:16, flexWrap:"wrap", margin:"20px auto 0", justifyContent:"center", textAlign:"center" }}>
-              <span style={{ fontSize:"clamp(14px,3vw,22px)", color:"#FFFFFF", fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>Production Rule Format</span>
-              <div style={{ fontFamily:"'JetBrains Mono'", fontSize:"clamp(13px,3vw,20px)", display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", justifyContent:"center" }}>
-                <span style={{ color:"#f472b6", fontWeight:700 }}>A</span>
-                <span style={{ color:"#475569" }}>→</span>
-                <span style={{ color:"#a5b4fc" }}>α</span>
-                <span style={{ color:"#FFFFFF" }}>where α ∈ (V ∪ Σ)* and A ∈ V</span>
+            <div style={{ display:"flex", justifyContent:"center", marginTop:20 }}>
+              <div style={{ background:"rgba(15,23,42,0.7)", border:"1px solid rgba(99,102,241,0.12)", borderRadius:12, padding:"16px 20px", display:"inline-flex", alignItems:"center", gap:16, flexWrap:"wrap", justifyContent:"center", textAlign:"center", maxWidth:"100%" }}>
+                <span style={{ fontSize:"clamp(14px,3vw,22px)", color:"#FFFFFF", fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>Production Rule Format</span>
+                <div style={{ fontFamily:"'JetBrains Mono'", fontSize:"clamp(13px,3vw,20px)", display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", justifyContent:"center" }}>
+                  <span style={{ color:"#f472b6", fontWeight:700 }}>A</span>
+                  <span style={{ color:"#475569" }}>→</span>
+                  <span style={{ color:"#a5b4fc" }}>α</span>
+                  <span style={{ color:"#FFFFFF" }}>where α ∈ (V ∪ Σ)* and A ∈ V</span>
+                </div>
               </div>
             </div>
           </Reveal>
