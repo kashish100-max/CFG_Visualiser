@@ -398,7 +398,7 @@ function AnimatedCount({ value, color = "#818cf8" }) {
 }
 
 // ─── SINGLE TREE SVG (step-by-step manual control + hover tooltip) ────────────
-function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
+function SingleTreeSVG({ tree, rules, animationKey, treeIndex, compact = false }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hoveredNode, setHoveredNode] = useState(null);
@@ -454,12 +454,17 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
 
   // ── Desktop: original big layout ──────────────────────────────
   // ── Mobile:  compact responsive layout ───────────────────────
-  const R    = isMobile ? 18 : 22;
-  const hGap = isMobile ? Math.max(50, Math.min(80, 300 / Math.max(leafCount, 1))) : 120;
-  const vGap = isMobile ? 80 : 140;
-  const pad  = isMobile ? 40 : 75;
+  // ── compact: small preview on landing page ────────────────────
+  const R    = isMobile ? 14 : 22;
+  const hGap = isMobile ? 35 : 120;
+  const vGap = isMobile ? 65 : 140;
+  const pad  = isMobile ? 20 : 75;
 
-  const W = Math.max(isMobile ? 240 : 280, (maxX - minX) * hGap + pad * 2);
+ const screenWidth = window.innerWidth;
+
+const W = isMobile 
+  ? screenWidth - 20 
+  : Math.max(280, (maxX - minX) * hGap + pad * 2);
   const H = maxD * vGap + pad * 2;
   const getX = x => pad + (x - minX) * hGap;
   const getY = d => pad + d * vGap;
@@ -545,16 +550,16 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
         overflowX: "auto", overflowY: "hidden",
         WebkitOverflowScrolling: "touch",
         borderRadius: 10,
-        background: "rgba(8,14,28,0.5)",
-        padding: "4px 4px 0 4px",
+        background: "transparent",
+        padding:"0px",
       }}>
-        <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`}
-          style={{ display: "block", margin: "auto", minWidth: Math.min(W, isMobile ? 220 : 260) }}>
+        <svg ref={svgRef} width="100%" height={H} viewBox={`0 0 ${W} ${H}`}
+          style={{ display: "block", margin: "auto" }}>
           <defs>
             <marker
               id={`arrow-${animationKey}`}
-              markerWidth="18" markerHeight="18"
-              refX="18" refY="9"
+              markerWidth="10" markerHeight="10"
+              refX="10" refY="5"
               orient="auto"
               markerUnits="userSpaceOnUse">
               <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
@@ -575,11 +580,11 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
               return (
                 <g key={`e${i}-${ci}-${animationKey}`}>
                   <line x1={x1} y1={y1} x2={stopX} y2={stopY}
-                    stroke="#818cf8" strokeWidth="5" strokeLinecap="butt" strokeOpacity="0.15"
+                    stroke="#818cf8" strokeWidth="2" strokeLinecap="butt" strokeOpacity="0.15"
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
                     style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
                   <line x1={x1} y1={y1} x2={stopX} y2={stopY}
-                    stroke="#818cf8" strokeWidth="1.8" strokeLinecap="butt"
+                    stroke="#818cf8" strokeWidth="1.2" strokeLinecap="butt"
                     markerEnd={`url(#arrow-${animationKey})`}
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
                     style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
@@ -633,7 +638,7 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
 }
 
 // ─── PARSE TREE WRAPPER ───────────────────────────────────────────────────────
-function ParseTreeSVG({ rules, startSymbol, targetStr, animationKey, onAmbiguityInfo }) {
+function ParseTreeSVG({ rules, startSymbol, targetStr, animationKey, onAmbiguityInfo, compact = false }) {
   const [selectedTree, setSelectedTree] = useState(0);
   let parseResult = null;
   try { parseResult = buildParseTree(rules, startSymbol, targetStr); } catch (e) { /* silent */ }
@@ -677,7 +682,7 @@ function ParseTreeSVG({ rules, startSymbol, targetStr, animationKey, onAmbiguity
           </div>
         </div>
       )}
-      <SingleTreeSVG key={`${animationKey}-${selectedTree}`} tree={allTrees[Math.min(selectedTree, allTrees.length - 1)]} rules={rules} animationKey={animationKey} treeIndex={selectedTree} />
+      <SingleTreeSVG key={`${animationKey}-${selectedTree}`} tree={allTrees[Math.min(selectedTree, allTrees.length - 1)]} rules={rules} animationKey={animationKey} treeIndex={selectedTree} compact={compact} />
     </div>
   );
 }
@@ -1060,7 +1065,7 @@ function ToolPage({ onBack }) {
             </div>
             <div style={{ marginBottom: 14 }}>
               <label style={{ display: "block", fontSize: "clamp(11px,1.3vw,14px)", fontWeight: 700, color: "#818cf8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 7 }}>Target String</label>
-              <input type="text" value={targetStr} onChange={(e) => setTargetStr(e.target.value)} placeholder="aaabbb" style={{ height: 40 }} />
+              <input id="target-string-input" type="text" value={targetStr} onChange={(e) => setTargetStr(e.target.value)} placeholder="aaabbb" style={{ height: 40 }} />
             </div>
             <button className="gen-btn" onClick={generate} style={{ boxShadow: "2px 2px 10px #8b56f6" }}>Generate ↗</button>
             {error && <div style={{ marginTop: 10, color: "#f87171", fontSize: "clamp(11px,1.3vw,13px)", background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: 8, padding: "8px 12px" }}>{error}</div>}
@@ -1068,7 +1073,7 @@ function ToolPage({ onBack }) {
               <div style={{ fontSize: "clamp(12px,1.4vw,15px)", color: "#FFF", marginBottom: 7, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase" }}>Quick Examples</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                 {examples.map(ex => (
-                  <button key={ex.label} className="ex-btn" onClick={() => { setGrammarText(ex.grammar); setTargetStr(ex.str); }}>{ex.label}</button>
+                  <button key={ex.label} className="ex-btn" onClick={() => { setGrammarText(ex.grammar); setTargetStr(ex.str); setTimeout(() => { const el = document.getElementById("grammar-input"); if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus(); } }, 100); }}>{ex.label}</button>
                 ))}
               </div>
             </div>
@@ -1327,7 +1332,7 @@ function ToolPage({ onBack }) {
                                 ) : (
                                   <>
                                     <code style={{ color: "#4ade80", fontFamily: "'JetBrains Mono'", fontSize: 14, background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.22)", borderRadius: 6, padding: "3px 12px" }}>{autoGenStr}</code>
-                                    <button onClick={() => setTargetStr(autoGenStr)} style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "white", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Use This ↗</button>
+                                    <button onClick={() => { setTargetStr(autoGenStr); setTimeout(() => { const el = document.getElementById("target-string-input"); if (el) { el.scrollIntoView({ behavior: "smooth", block: "center" }); el.focus(); } }, 100); }} style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "white", border: "none", borderRadius: 6, padding: "4px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Use This ↗</button>
                                   </>
                                 )}
                               </div>
@@ -1837,7 +1842,7 @@ export default function CFGApp() {
             ))}
           </div>
           <Reveal delay={120}>
-  <div style={{ margin: "0 auto", width: "fit-content", background: "rgba(15,23,42,0.85)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: 16, padding: 28 }}>
+  <div style={{ margin: "0 auto", width: "fit-content", maxWidth: "100%", background: "rgba(15,23,42,0.85)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: 16, padding: 20 }}>
     <div style={{ fontSize: 20, color: "#b0b0b0", marginBottom: 18 }}>
       <span style={{ color: "white" }}>Tree Visualisation Example</span> <br />
       <br />
@@ -1846,13 +1851,12 @@ export default function CFGApp() {
     </div>
     
     {/* Tree Area */}
-    <div style={{ overflowX: "auto", display: "flex", justifyContent: "center", background: "rgba(2, 6, 23, 0.4)", borderRadius: 12, padding: "20px" }}>
-      <ParseTreeSVG 
-        rules={{ "S": ["aSb", "ab"] }} 
-        startSymbol="S" 
-        targetStr="aaabbb" 
-      />
-    </div>
+    <ParseTreeSVG 
+      rules={{ "S": ["aSb", "ab"] }} 
+      startSymbol="S" 
+      targetStr="aaabbb"
+      compact={true}
+    />
 
     {/* Legend (Colors) */}
     <div style={{ marginTop: 20, display: "flex", gap: 18, flexWrap: "wrap", justifyContent: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 16 }}>
