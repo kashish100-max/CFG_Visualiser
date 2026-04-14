@@ -950,7 +950,7 @@ function ToolPage({ onBack }) {
         .back-btn:hover { background:rgba(99,102,241,0.2); color:#e2e8f0; }
         ::-webkit-scrollbar { width:5px; height:5px; } ::-webkit-scrollbar-track { background:#0f172a; } ::-webkit-scrollbar-thumb { background:#334155; border-radius:3px; }
         .tool-grid { display:grid; grid-template-columns:min(380px,38%) 1fr; gap:18px; align-items:start; }
-        @media (max-width:768px) { .tool-grid { grid-template-columns:1fr; } .tool-nav-links { display:none !important; } .hamburger { display:flex !important; } .nav-interactive-label { display:none !important; } }
+        @media (max-width:768px) { .tool-grid { grid-template-columns:1fr; } .tool-nav-links { display:none !important; } .hamburger { display:none !important; } .nav-interactive-label { display:none !important; } }
         @media (min-width:769px) { .hamburger { display:none !important; } }
         .prod-rule-badge { font-size:clamp(9px,1.1vw,11px); color:#c084fc; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.22); padding:2px 7px; border-radius:4px; white-space:nowrap; font-family:'JetBrains Mono',monospace; margin-top:2px; }
         @keyframes statPop { 0%{transform:scale(0.88);opacity:0} 60%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
@@ -1481,7 +1481,7 @@ export default function CFGApp() {
         .btn-outline { background:transparent; color:#94a3b8; border:1px solid rgba(99,102,241,0.3); padding:15px 36px; border-radius:50px; font-size:15px; cursor:pointer; transition:all 0.2s; font-family:inherit; font-weight:500; min-width:220px; text-align:center; }
         .btn-outline:hover { border-color:rgba(139,92,246,0.5); color:#c084fc; background:rgba(99,102,241,0.07); }
 
-        .step-demo { display:flex; align-items:center; gap:10px; padding:9px 14px; border-radius:8px; background:rgba(30,41,59,0.55); margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:13px; border:1px solid rgba(99,102,241,0.08); }
+        .step-demo { display:flex; align-items:flex-start; gap:8px; padding:9px 14px; border-radius:8px; background:rgba(30,41,59,0.55); margin-bottom:6px; font-family:'JetBrains Mono',monospace; font-size:13px; border:1px solid rgba(99,102,241,0.08); flex-wrap:wrap; }
         .nt { color:#818cf8; font-weight:700; }
         .term { color:#4ade80; font-weight:700; }
 
@@ -1574,13 +1574,13 @@ export default function CFGApp() {
           </Reveal>
 
           <Reveal delay={200}>
-            <div style={{ marginTop:56, display:"flex", justifyContent:"center" }}>
-              <div style={{ display:"inline-flex", alignItems:"center", gap:16, background:"rgba(99,102,241,0.07)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:16, padding:"18px 36px", fontFamily:"'JetBrains Mono',monospace", fontSize:18, color:"#a5b4fc", letterSpacing:"0.04em", flexWrap:"wrap", justifyContent:"center" }}>
-                <span>G = {"{ "}</span>
+            <div style={{ marginTop:56, display:"flex", justifyContent:"center", overflowX:"auto", padding:"0 4px" }}>
+              <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(99,102,241,0.07)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:16, padding:"14px 24px", fontFamily:"'JetBrains Mono',monospace", fontSize:"clamp(15px,3.5vw,18px)", color:"#a5b4fc", letterSpacing:"0.04em", flexWrap:"nowrap", whiteSpace:"nowrap", justifyContent:"center", overflowX:"auto", maxWidth:"100%" }}>
+                <span>G&nbsp;=&nbsp;{"{ "}</span>
                 <span style={{ color:"#818cf8" }}>V</span><span style={{ color:"#475569" }}>,</span>
-                <span style={{ color:"#34d399" }}>Σ</span><span style={{ color:"#475569" }}>,</span>
-                <span style={{ color:"#f59e0b" }}>S</span><span style={{ color:"#475569" }}>,</span>
-                <span style={{ color:"#f472b6" }}>P</span><span>{" }"}</span>
+                <span style={{ color:"#34d399" }}>&nbsp;Σ</span><span style={{ color:"#475569" }}>,</span>
+                <span style={{ color:"#f59e0b" }}>&nbsp;S</span><span style={{ color:"#475569" }}>,</span>
+                <span style={{ color:"#f472b6" }}>&nbsp;P</span><span>&nbsp;{"}"}</span>
               </div>
             </div>
           </Reveal>
@@ -1646,9 +1646,9 @@ export default function CFGApp() {
 
           {/* Production rule format strip */}
           <Reveal delay={200}>
-            <div style={{ marginTop:20, background:"rgba(15,23,42,0.7)", border:"1px solid rgba(99,102,241,0.12)", borderRadius:12, padding:"16px 24px", display:"flex", alignItems:"center", gap:24, flexWrap:"wrap" ,width:"fit-content", margin:"20px auto 0" }}>
-              <span style={{ fontSize:22, color:"#FFFFFF", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase" }}>Production Rule Format</span>
-              <div style={{ fontFamily:"'JetBrains Mono'", fontSize:22, display:"flex", alignItems:"center", gap:8 }}>
+            <div style={{ marginTop:20, background:"rgba(15,23,42,0.7)", border:"1px solid rgba(99,102,241,0.12)", borderRadius:12, padding:"16px 20px", display:"flex", alignItems:"center", gap:16, flexWrap:"wrap", margin:"20px auto 0", justifyContent:"center", textAlign:"center" }}>
+              <span style={{ fontSize:"clamp(14px,3vw,22px)", color:"#FFFFFF", fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>Production Rule Format</span>
+              <div style={{ fontFamily:"'JetBrains Mono'", fontSize:"clamp(13px,3vw,20px)", display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", justifyContent:"center" }}>
                 <span style={{ color:"#f472b6", fontWeight:700 }}>A</span>
                 <span style={{ color:"#475569" }}>→</span>
                 <span style={{ color:"#a5b4fc" }}>α</span>
@@ -1708,13 +1708,13 @@ export default function CFGApp() {
                   <div style={{ borderTop:"1px solid rgba(99,102,241,0.1)", paddingTop:12 ,}}>
                     {col.steps.map((step, i) => (
                       <div key={i} className="step-demo">
-                        <span style={{ color:"#b5bcc5", fontSize:20, minWidth:20 }}>{i === 0 ? "⊢" : "→"}</span>
-                        <span style={{ flex:1 ,fontSize:20, letterSpacing:"0.03em" }}>
+                        <span style={{ color:"#b5bcc5", fontSize:"clamp(14px,3vw,20px)", minWidth:20 }}>{i === 0 ? "⊢" : "→"}</span>
+                        <span style={{ flex:1, fontSize:"clamp(13px,3vw,20px)", letterSpacing:"0.03em" }}>
                           {step.s.split("").map((ch, j) => (
                             <span key={j} className={["A","B","S","C","D","E","T","F"].includes(ch) ? "nt" : "term"}>{ch}</span>
                           ))}
                         </span>
-                        <span style={{ fontSize:18, color:"#8d9299" }}>{step.r}</span>
+                        <span style={{ fontSize:"clamp(11px,2.5vw,16px)", color:"#8d9299", wordBreak:"break-word", textAlign:"right" }}>{step.r}</span>
                       </div>
                     ))}
                   </div>
