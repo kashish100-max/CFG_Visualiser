@@ -558,10 +558,12 @@ const W = isMobile
           <defs>
             <marker
               id={`arrow-${animationKey}`}
-              markerWidth="10" markerHeight="10"
-              refX="10" refY="5"
-              orient="auto"
-              markerUnits="userSpaceOnUse">
+              markerWidth={isMobile ? 12 : 18}
+markerHeight={isMobile ? 12 : 18}
+refX={isMobile ? 12 : 18}
+refY={isMobile ? 6 : 9}
+orient="auto"
+markerUnits="userSpaceOnUse">
               <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
             </marker>
           </defs>
