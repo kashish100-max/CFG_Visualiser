@@ -1503,11 +1503,10 @@ export default function CFGApp() {
   );
 
   return (
-    <div style={{ opacity:fade?0:1, transition:"opacity 0.38s ease", background:"#030712", color:"#e2e8f0", minHeight:"100vh", fontFamily:"'Inter','Segoe UI',sans-serif", position:"relative", overflowX:"hidden", width:"100%" }}>
+    <div style={{ opacity:fade?0:1, transition:"opacity 0.38s ease", background:"#030712", color:"#e2e8f0", minHeight:"100vh", fontFamily:"'Inter','Segoe UI',sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
         * { box-sizing:border-box; margin:0; padding:0; }
-        html, body { overflow-x: hidden; max-width: 100%; }
         ::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#0f172a; } ::-webkit-scrollbar-thumb { background:#334155; border-radius:3px; }
         @keyframes gradientShift {
           0%   { background-position: 0% 50%; }
@@ -1598,7 +1597,7 @@ export default function CFGApp() {
       <GridBackground />
 
       {/* ── NAVBAR ── */}
-      <nav style={{ position:"sticky", top:0, zIndex:100, background:"transparent", backdropFilter:"blur(20px)", borderBottom:"1px solid rgba(99,102,241,0.12)", padding:"10px 32px" }}>
+      <nav style={{ position:"sticky", top:0, zIndex:100, background:"transparent", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", borderBottom:"1px solid rgba(99,102,241,0.12)", padding:"10px 32px" }}>
         <div style={{ margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:62, position:"relative" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <div style={{ width:34, height:34, borderRadius:9, background:"linear-gradient(135deg,#6366f1,#8b5cf6)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:17, fontWeight:800, color:"white" }}>G</div>
@@ -1954,8 +1953,8 @@ export default function CFGApp() {
         </section>
 
         {/* ── FOOTER ── */}
-        <footer style={{ borderTop:"1px solid rgba(99,102,241,0.1)", background:"rgba(3,0,0,0.97)", backdropFilter:"blur(20px)", padding:"64px 32px 32px", width:"100%", boxSizing:"border-box" }}>
-          <div style={{ maxWidth:1100, margin:"0 auto", width:"100%" }}>
+        <footer style={{ borderTop:"1px solid rgba(99,102,241,0.1)", background:"rgba(3,0,0,0.97)", backdropFilter:"blur(20px)", padding:"64px 32px 32px" }}>
+          <div style={{ margin:"0 auto" }}>
             <div className="footer-grid" style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr", gap:30, marginBottom:56 }}>
               {/* Brand */}
               <div className="footer-brand">
