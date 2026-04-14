@@ -456,15 +456,16 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex, compact = false }
   // ── Mobile:  compact responsive layout ───────────────────────
   // ── compact: small preview on landing page ────────────────────
   const R    = isMobile ? 14 : 22;
-  const hGap = isMobile ? 35 : 120;
+  const hGap = isMobile ? 55 : 120;
   const vGap = isMobile ? 65 : 140;
-  const pad  = isMobile ? 20 : 75;
+  const pad  = isMobile ? 25 : 75;
 
- const screenWidth = window.innerWidth;
+  const screenWidth = window.innerWidth;
+  const treeWidth = (maxX - minX) * hGap + pad * 2;
 
-const W = isMobile 
-  ? screenWidth - 20 
-  : Math.max(280, (maxX - minX) * hGap + pad * 2);
+const W = isMobile
+  ? Math.max(treeWidth, screenWidth - 20)
+  : Math.max(280, treeWidth);
   const H = maxD * vGap + pad * 2;
   const getX = x => pad + (x - minX) * hGap;
   const getY = d => pad + d * vGap;
@@ -497,11 +498,6 @@ const W = isMobile
       {isMobile && (
         <>
           <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {[{ color: "#ef4444", label: "Root" }, { color: "#3b82f6", label: "NT" }, { color: "#22c55e", label: "Terminal" }].map(({ color, label }) => (
-              <span key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#94a3b8", fontFamily: "'JetBrains Mono'" }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", background: color, display: "inline-block" }} />{label}
-              </span>
-            ))}
             <span style={{ marginLeft: "auto", fontSize: 10, color: "#818cf8", fontFamily: "'JetBrains Mono'", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.18)", borderRadius: 4, padding: "1px 7px" }}>
               {currentStep} / {totalNodes}
             </span>
@@ -558,12 +554,13 @@ const W = isMobile
           <defs>
             <marker
               id={`arrow-${animationKey}`}
-              markerWidth={isMobile ? 12 : 18}
-markerHeight={isMobile ? 12 : 18}
-refX={isMobile ? 12 : 18}
-refY={isMobile ? 6 : 9}
+              markerWidth="18"
+markerHeight="18"
+refX="18"
+refY="9"
+viewBox="0 0 18 18"
 orient="auto"
-markerUnits="userSpaceOnUse">
+markerUnits="strokeWidth">
               <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
             </marker>
           </defs>
