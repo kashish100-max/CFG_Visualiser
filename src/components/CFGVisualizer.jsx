@@ -402,8 +402,17 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hoveredNode, setHoveredNode] = useState(null);
+  const [tappedNode, setTappedNode] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const playTimerRef = useRef(null);
   const svgRef = useRef(null);
+
+  // Track screen size
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const localTree = JSON.parse(JSON.stringify(tree));
   calculateLayout(localTree);
@@ -414,14 +423,11 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
   while (bq.length > 0) { const nd = bq.shift(); bfsOrder.push(nd); (nd.children || []).forEach(c => bq.push(c)); }
   const totalNodes = bfsOrder.length;
 
-  // Reset step when tree changes
   useEffect(() => {
-    setCurrentStep(0);
-    setIsPlaying(false);
+    setCurrentStep(0); setIsPlaying(false); setTappedNode(null);
     if (playTimerRef.current) clearInterval(playTimerRef.current);
   }, [animationKey, treeIndex]);
 
-  // Auto-play logic
   useEffect(() => {
     if (isPlaying) {
       playTimerRef.current = setInterval(() => {
@@ -441,65 +447,110 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
   const handlePlay     = () => { if (currentStep >= totalNodes) setCurrentStep(0); setIsPlaying(p => !p); };
   const handleReset    = () => { setCurrentStep(0); setIsPlaying(false); };
 
-  const R = 22, hGap = 120, vGap = 140, pad = 75;
   const minX = Math.min(...allNodes.map(n => n.x));
   const maxX = Math.max(...allNodes.map(n => n.x));
   const maxD = Math.max(...allNodes.map(n => n.depth));
-  const W = Math.max(280, (maxX - minX) * hGap + pad * 2);
+  const leafCount = allNodes.filter(n => !n.children || n.children.length === 0).length;
+
+  // ── Desktop: original big layout ──────────────────────────────
+  // ── Mobile:  compact responsive layout ───────────────────────
+  const R    = isMobile ? 18 : 22;
+  const hGap = isMobile ? Math.max(50, Math.min(80, 300 / Math.max(leafCount, 1))) : 120;
+  const vGap = isMobile ? 80 : 140;
+  const pad  = isMobile ? 40 : 75;
+
+  const W = Math.max(isMobile ? 240 : 280, (maxX - minX) * hGap + pad * 2);
   const H = maxD * vGap + pad * 2;
   const getX = x => pad + (x - minX) * hGap;
   const getY = d => pad + d * vGap;
   const visibleSet = new Set(bfsOrder.slice(0, currentStep));
 
+  const activeNode = tappedNode || hoveredNode;
+  const progress = totalNodes > 0 ? (currentStep / totalNodes) * 100 : 0;
+
+  // ── Button styles ─────────────────────────────────────────────
   const btnBase = {
-    border: "none", borderRadius: 7, fontSize: "clamp(12px,3vw,14px)", fontWeight: 600,
-    cursor: "pointer", fontFamily: "inherit", padding: "7px 12px",
+    border: "none", borderRadius: 7, fontWeight: 600,
+    cursor: "pointer", fontFamily: "inherit",
     display: "flex", alignItems: "center", gap: 4, transition: "all 0.2s",
-    minHeight: 36, whiteSpace: "nowrap"
+    whiteSpace: "nowrap",
+    // desktop original sizing; mobile stretches
+    fontSize: isMobile ? "clamp(11px,3.5vw,13px)" : "clamp(12px,3vw,14px)",
+    padding: isMobile ? "8px 10px" : "7px 12px",
+    minHeight: isMobile ? 38 : 36,
+    flex: isMobile ? "1 1 auto" : "0 0 auto",
+    justifyContent: isMobile ? "center" : "flex-start",
   };
   const btnEnabled  = { ...btnBase, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "white",  boxShadow: "0 0 10px rgba(139,92,246,0.3)" };
-  const btnDisabled = { ...btnBase, background: "rgba(99,102,241,0.08)",                   color: "#77808b", cursor: "not-allowed" };
+  const btnDisabled = { ...btnBase, background: "rgba(99,102,241,0.08)", color: "#77808b", cursor: "not-allowed" };
+  const btnReset    = { ...btnBase, background: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)", flex: isMobile ? "0 0 auto" : "0 0 auto" };
 
   return (
     <div style={{ position: "relative" }}>
+
+      {/* ── Mobile: progress bar + legend ── */}
+      {isMobile && (
+        <>
+          <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap", alignItems: "center" }}>
+            {[{ color: "#ef4444", label: "Root" }, { color: "#3b82f6", label: "NT" }, { color: "#22c55e", label: "Terminal" }].map(({ color, label }) => (
+              <span key={label} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "#94a3b8", fontFamily: "'JetBrains Mono'" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: color, display: "inline-block" }} />{label}
+              </span>
+            ))}
+            <span style={{ marginLeft: "auto", fontSize: 10, color: "#818cf8", fontFamily: "'JetBrains Mono'", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.18)", borderRadius: 4, padding: "1px 7px" }}>
+              {currentStep} / {totalNodes}
+            </span>
+          </div>
+          <div style={{ height: 3, borderRadius: 99, background: "rgba(99,102,241,0.12)", marginBottom: 10, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg,#6366f1,#a78bfa)", borderRadius: 99, transition: "width 0.3s ease" }} />
+          </div>
+        </>
+      )}
+
       {/* ── Controls row ── */}
       <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center", flexWrap: "wrap" }}>
-        {/* Backward */}
-        <button onClick={handleBackward} disabled={currentStep === 0}
-          style={currentStep === 0 ? btnDisabled : btnEnabled}>
-          ◀ Back
-        </button>
-        {/* Play / Pause */}
-        <button onClick={handlePlay}
-          style={btnEnabled}>
+        <button onClick={handleBackward} disabled={currentStep === 0} style={currentStep === 0 ? btnDisabled : btnEnabled}>◀ Back</button>
+        <button onClick={handlePlay} style={btnEnabled}>
           {isPlaying ? "⏸ Pause" : (currentStep >= totalNodes ? "↺ Replay" : "▶ Play")}
         </button>
-        {/* Forward */}
-        <button onClick={handleForward} disabled={currentStep >= totalNodes}
-          style={currentStep >= totalNodes ? btnDisabled : btnEnabled}>
-          Next ▶
-        </button>
-        {/* Reset */}
+        <button onClick={handleForward} disabled={currentStep >= totalNodes} style={currentStep >= totalNodes ? btnDisabled : btnEnabled}>Next ▶</button>
         <button onClick={handleReset} disabled={currentStep === 0}
-          style={currentStep === 0 ? btnDisabled : { ...btnBase, background: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)" }}>
-          ↺ Reset
-        </button>
-        {/* Step counter */}
-        <span style={{ fontSize: 13, color: "#818cf8", fontFamily: "'JetBrains Mono'", marginLeft: "auto", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 6, padding: "4px 10px" }}>
-          Step {currentStep} / {totalNodes}
-        </span>
+          style={currentStep === 0 ? btnDisabled : btnReset}>↺ Reset</button>
+        {/* Desktop: step counter on the right */}
+        {!isMobile && (
+          <span style={{ fontSize: 13, color: "#818cf8", fontFamily: "'JetBrains Mono'", marginLeft: "auto", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 6, padding: "4px 10px" }}>
+            Step {currentStep} / {totalNodes}
+          </span>
+        )}
         {currentStep === totalNodes && (
-          <span style={{ fontSize: 13, color: "#4ade80", fontFamily: "'JetBrains Mono'" }}>✓ Complete</span>
+          <span style={{ fontSize: 13, color: "#4ade80", fontFamily: "'JetBrains Mono'" }}>✓ {isMobile ? "Done" : "Complete"}</span>
         )}
       </div>
+
+      {/* Desktop hint / Mobile tap hint */}
       <div style={{ fontSize: 12, color: "#adafb1", marginBottom: 8, fontFamily: "'JetBrains Mono'" }}>
-        Hover nodes for rules
+        {isMobile ? "Tap a node to see its rule" : "Hover nodes for rules"}
       </div>
-      <div style={{ overflowX: "auto", overflowY: "auto", maxHeight: "70vh", WebkitOverflowScrolling: "touch", borderRadius: 10, background: "rgba(8,14,28,0.5)", padding: "4px" }}>
-        <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: "block", margin: "auto", minWidth: Math.min(W, 260) }}>
+
+      {/* ── Mobile: tapped node rule badge ── */}
+      {isMobile && tappedNode && tappedNode.rule && (
+        <div style={{ marginBottom: 10, background: "rgba(46,16,101,0.92)", border: "1px solid #a78bfa", borderRadius: 9, padding: "8px 14px", fontSize: 12, color: "#e9d5ff", fontFamily: "'JetBrains Mono'", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <span>{tappedNode.rule}</span>
+          <button onClick={() => setTappedNode(null)} style={{ background: "none", border: "none", color: "#a78bfa", cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0 }}>✕</button>
+        </div>
+      )}
+
+      {/* ── SVG container ── */}
+      <div style={{
+        overflowX: "auto", overflowY: "hidden",
+        WebkitOverflowScrolling: "touch",
+        borderRadius: 10,
+        background: "rgba(8,14,28,0.5)",
+        padding: "4px 4px 0 4px",
+      }}>
+        <svg ref={svgRef} width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+          style={{ display: "block", margin: "auto", minWidth: Math.min(W, isMobile ? 220 : 260) }}>
           <defs>
-            {/* markerUnits="userSpaceOnUse" keeps arrow size fixed regardless of strokeWidth.
-                markerWidth/Height in px. refX=10 = tip of arrow, so tip touches circle edge. */}
             <marker
               id={`arrow-${animationKey}`}
               markerWidth="18" markerHeight="18"
@@ -509,63 +560,60 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex }) {
               <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
             </marker>
           </defs>
+
+          {/* ── Edges ── */}
           {allNodes.map((node, i) =>
             (node.children || []).map((child, ci) => {
               if (!visibleSet.has(node) || !visibleSet.has(child)) return null;
-
-              // Line starts at bottom of parent circle, ends exactly at child circle boundary
-              const x1 = getX(node.x);
-              const y1 = getY(node.depth) + R;
-              const x2 = getX(child.x);
-              const y2 = getY(child.depth) - R;
-
-              // Pull back by arrowhead length (10px) so the tip lands on the circle edge
+              const x1 = getX(node.x), y1 = getY(node.depth) + R;
+              const x2 = getX(child.x), y2 = getY(child.depth) - R;
               const dx = x2 - x1, dy = y2 - y1;
               const len = Math.sqrt(dx * dx + dy * dy) || 1;
               const stopX = x2 - (dx / len) * 2;
               const stopY = y2 - (dy / len) * 2;
               const pathLen = Math.round(len) + 10;
-
               return (
                 <g key={`e${i}-${ci}-${animationKey}`}>
-                  {/* Subtle glow behind the line */}
-                  <line
-                    x1={x1} y1={y1} x2={stopX} y2={stopY}
+                  <line x1={x1} y1={y1} x2={stopX} y2={stopY}
                     stroke="#818cf8" strokeWidth="5" strokeLinecap="butt" strokeOpacity="0.15"
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
-                    style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }}
-                  />
-                  {/* Main straight line with arrowhead marker */}
-                  <line
-                    x1={x1} y1={y1} x2={stopX} y2={stopY}
+                    style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
+                  <line x1={x1} y1={y1} x2={stopX} y2={stopY}
                     stroke="#818cf8" strokeWidth="1.8" strokeLinecap="butt"
                     markerEnd={`url(#arrow-${animationKey})`}
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
-                    style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }}
-                  />
+                    style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
                 </g>
               );
             })
           )}
+
+          {/* ── Nodes ── */}
           {bfsOrder.map((node, i) => {
             if (!visibleSet.has(node)) return null;
             let fill = "#3b82f6", stroke = "#1d4ed8";
-            if (node.depth === 0) { fill = "#ef4444"; stroke = "#b91c1c"; }
+            if (node.depth === 0)          { fill = "#ef4444"; stroke = "#b91c1c"; }
             else if (!nts.has(node.value)) { fill = "#22c55e"; stroke = "#15803d"; }
             const cx = getX(node.x), cy = getY(node.depth);
-            const isH = hoveredNode === node;
+            const isH = isMobile ? (tappedNode === node) : (hoveredNode === node);
             return (
               <g key={`n${i}-${animationKey}`}
                 style={{ transformOrigin: `${cx}px ${cy}px`, animation: "nodePop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards", cursor: node.rule ? "pointer" : "default" }}
-                onMouseEnter={() => setHoveredNode(node)}
-                onMouseLeave={() => setHoveredNode(null)}>
+                onMouseEnter={() => !isMobile && setHoveredNode(node)}
+                onMouseLeave={() => !isMobile && setHoveredNode(null)}
+                onClick={() => isMobile && setTappedNode(tappedNode === node ? null : node)}
+              >
                 <circle cx={cx} cy={cy} r={isH ? R + 4 : R} fill={fill} stroke={isH ? "#c084fc" : stroke} strokeWidth={isH ? "3" : "2.3"}
                   style={{ filter: `drop-shadow(0 0 ${isH ? 14 : 7}px ${fill}88)`, transition: "all 0.15s" }} />
-                <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fill="white" fontSize="13" fontWeight="bold" fontFamily="'JetBrains Mono',monospace">{node.value}</text>
+                <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fill="white"
+                  fontSize={isMobile ? (node.value.length > 2 ? "9" : "11") : "13"}
+                  fontWeight="bold" fontFamily="'JetBrains Mono',monospace">{node.value}</text>
               </g>
             );
           })}
-          {hoveredNode && hoveredNode.rule && (() => {
+
+          {/* ── Desktop hover tooltip (inside SVG) ── */}
+          {!isMobile && hoveredNode && hoveredNode.rule && (() => {
             const cx = getX(hoveredNode.x), cy = getY(hoveredNode.depth);
             const label = hoveredNode.rule;
             const tipW = Math.min(label.length * 7.8 + 24, 280);
@@ -842,8 +890,8 @@ function ToolPage({ onBack }) {
     { label: "Right Recursion",   grammar: "S -> aS | bS | a | b",                                   str: "aba"     },
     { label: "Palindrome",        grammar: "S -> aSa | bSb | a | b | ε",                             str: "abba"    },
     { label: "aⁿb²ⁿ",            grammar: "S -> aSbb | abb",                                         str: "aabbbb"  },
-    { label: "Ambiguous Expr ⚡", grammar: "E -> E+E | E*E | E-E | a | b | c",                      str: "a+b*c"   },
-    { label: "Dangling Else ⚡",   grammar: "S -> iS | iSeS | a",                                     str: "iia"     },
+    { label: "Ambiguous Expr", grammar: "E -> E+E | E*E | E-E | a | b | c",                      str: "a+b*c"   },
+    { label: "Dangling Else ",   grammar: "S -> iS | iSeS | a",                                     str: "iia"     },
     { label: "Dyck Words",        grammar: "S -> SS | (S) | ε",                                      str: "(())"    },
     { label: "Even Length",       grammar: "S -> aSa | bSb | aSb | bSa | aa | bb | ab | ba",        str: "abba"    },
     { label: "aⁿbⁿcⁿ-like",      grammar: "S -> aSBC | aBC\nCB -> BC\naB -> ab\nbB -> bb\nbC -> bc\ncC -> cc", str: "abc" },
@@ -971,7 +1019,6 @@ function ToolPage({ onBack }) {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 26, height: 26, borderRadius: 7, background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "white" }}>G</div>
               <span style={{ fontSize: "clamp(14px,2vw,17px)", fontWeight: 700, color: "#a5b4fc" }}>CFG Visualiser</span>
-              <span style={{ fontSize: 14, color: "#6f757c" }}>/ Generator</span>
             </div>
           </div>
           <div className="nav-interactive-label" style={{ fontSize: 16, color: "#6f757c", fontFamily: "'JetBrains Mono',monospace" }}>Interactive Tool</div>
@@ -1888,7 +1935,7 @@ export default function CFGApp() {
               <div style={{ fontSize:18, letterSpacing:"0.15em", textTransform:"uppercase", color:"#818cf8", fontWeight:700, marginBottom:14 }}>Ready to Experiment?</div>
               <h2 style={{ fontSize:36, fontWeight:800, color:"#f1f5f9", marginBottom:14, letterSpacing:"-0.03em" }}>Turn Your Learning Into Practice</h2>
               <p style={{ color:"#64748b", fontSize:20, margin:"0 auto 36px", lineHeight:1.7 }}>Enter any context-free grammar, pick a target string, and watch the derivation unfold step by step.</p>
-              <button className="btn-hero" onClick={goTool}>⚡ Launch CFG Generator</button>
+              <button className="btn-hero" onClick={goTool}>Launch CFG Generator</button>
             </div>
           </Reveal>
         </section>
