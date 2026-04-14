@@ -455,7 +455,7 @@ function SingleTreeSVG({ tree, rules, animationKey, treeIndex, compact = false }
   // ── Desktop: original big layout ──────────────────────────────
   // ── Mobile:  compact responsive layout ───────────────────────
   // ── compact: small preview on landing page ────────────────────
-  const R    = isMobile ? 18 : 22;
+  const R    = isMobile ? 20 : 22;
   const hGap = isMobile ? 55 : 120;
   const vGap = isMobile ? 65 : 140;
   const pad  = isMobile ? 25 : 75;
@@ -552,27 +552,29 @@ const W = isMobile
         <svg ref={svgRef} width="100%" height={H} viewBox={`0 0 ${W} ${H}`}
           style={{ display: "block", margin: "auto" }}>
           <defs>
+            {/* Desktop arrow — large, strokeWidth-scaled */}
             <marker
               id={`arrow-${animationKey}`}
               markerWidth="18"
-markerHeight="18"
-refX="18"
-refY="9"
-viewBox="0 0 18 18"
-orient="auto"
-markerUnits="strokeWidth">
+              markerHeight="18"
+              refX="18"
+              refY="9"
+              viewBox="0 0 18 18"
+              orient="auto"
+              markerUnits="strokeWidth">
               <path d="M0,0 L0,18 L18,9 z" fill="#a78bfa" />
             </marker>
+            {/* Mobile arrow — small, fixed pixel size */}
             <marker
               id={`arrow-mobile-${animationKey}`}
-              markerWidth="7"
-              markerHeight="7"
-              refX="6"
-              refY="3.5"
-              viewBox="0 0 7 7"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="5"
+              viewBox="0 0 10 10"
               orient="auto"
-              markerUnits="userSpaceOnUse">
-              <path d="M0,0 L0,7 L7,3.5 z" fill="#a78bfa" />
+              markerUnits="strokeWidth">
+              <path d="M0,0 L0,10 L10,5 z" fill="#a78bfa" />
             </marker>
           </defs>
 
@@ -594,7 +596,7 @@ markerUnits="strokeWidth">
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
                     style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
                   <line x1={x1} y1={y1} x2={stopX} y2={stopY}
-                    stroke="#818cf8" strokeWidth="1.2" strokeLinecap="butt"
+                    stroke="#818cf8" strokeWidth={isMobile ? "0.8" : "1.2"} strokeLinecap="butt"
                     markerEnd={isMobile ? `url(#arrow-mobile-${animationKey})` : `url(#arrow-${animationKey})`}
                     strokeDasharray={pathLen} strokeDashoffset={pathLen}
                     style={{ animation: "edgeDraw 0.5s cubic-bezier(0.4,0,0.2,1) forwards" }} />
