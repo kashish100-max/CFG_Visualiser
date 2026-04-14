@@ -2036,10 +2036,6 @@ export default function CFGApp() {
               <div style={{ fontSize:16, color:"#b5b5b5" }}>© 2026 CFG Visualiser</div>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <div style={{ width:6, height:6, borderRadius:"50%", background:"#4ade80" }}/>
-                <span style={{ fontSize:16, color:"#b5b5b5" }}>Built for the study of formal language theory</span>
-              </div>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <div style={{ width:6, height:6, borderRadius:"50%", background:"#4ade80" }}/>
                 <span style={{ fontSize:16, color:"#b5b5b5" }}>Made with ❤️ by <span style={{color:"#818cf8"}}>Kashish 2024UCS1671</span></span>
               </div>
             </div>
